@@ -54,8 +54,8 @@
       </div>
 
       <div class="top-actions">
-        <button class="button secondary top-hide-mobile" id="topUploadBtn" type="button" data-i18n="action.chooseImage">Choose Image</button>
-        <button class="icon-button" id="productHelpBtn" type="button" aria-label="使用说明、隐私与版本" title="使用说明、隐私与版本" data-i18n-aria="aria.help" data-i18n-title="aria.help">?</button>
+        <button class="button secondary top-hide-mobile" id="topUploadBtn" type="button" hidden data-i18n="action.chooseImage">Choose Image</button>
+        <button class="icon-button" id="productHelpBtn" type="button" hidden aria-label="使用说明、隐私与版本" title="使用说明、隐私与版本" data-i18n-aria="aria.help" data-i18n-title="aria.help">?</button>
         <button class="icon-button" id="undoBtn" type="button" aria-label="撤销" title="撤销 Ctrl+Z" data-i18n-aria="aria.undo" data-i18n-title="title.undo" disabled><span aria-hidden="true">↶</span></button>
         <button class="icon-button" id="redoBtn" type="button" aria-label="重做" title="重做 Ctrl+Y" data-i18n-aria="aria.redo" data-i18n-title="title.redo" disabled><span aria-hidden="true">↷</span></button>
         <span class="top-divider" aria-hidden="true"></span>
@@ -319,20 +319,19 @@
               </ol>
               <div class="hero-actions">
                 <button class="button primary" id="trySampleBtn" type="button" data-i18n="action.trySample">试试示例</button>
-                <button class="button secondary" id="emptyUploadBtn" type="button" data-i18n="action.chooseImage">选择图片</button>
-                <a class="button secondary" id="downloadOfflineLink" href="https://github.com/zwhy149/bead-grid-studio/releases/latest" target="_blank" rel="noopener noreferrer" data-i18n="action.downloadOffline">下载离线版</a>
+                <!-- <button class="button secondary" id="emptyUploadBtn" type="button" data-i18n="action.chooseImage">选择图片</button> -->
+                <a class="button secondary" id="downloadOfflineLink" href="https://github.com/zwhy149/bead-grid-studio/releases/latest" target="_blank" rel="noopener noreferrer" hidden data-i18n="action.downloadOffline">下载离线版</a>
               </div>
-              <div class="recovery-actions" id="recoveryActions" hidden>
+              <div class="recovery-actions" id="recoveryActions" hidden data-ui-hidden>
                 <button class="button secondary compact" id="restoreDraftBtn" type="button" data-i18n="draft.restore">恢复上次未完成图纸</button>
                 <button class="button danger compact" id="clearDraftBtn" type="button" data-i18n="draft.clear">清除恢复记录</button>
               </div>
-              <div class="hero-promises" aria-label="本地与离线特性" data-i18n-aria="aria.localPromises">
+              <div class="hero-promises" hidden aria-label="本地与离线特性" data-i18n-aria="aria.localPromises">
                 <span data-i18n="hero.noInstall">无需安装</span>
                 <span data-i18n="hero.noAccount">无需注册</span>
                 <span data-i18n="hero.noUpload">图片不上云</span>
                 <span data-i18n="hero.offline">支持离线</span>
               </div>
-              <div class="privacy-note" data-i18n="hero.local">图片仅在你的浏览器本地处理</div>
             </div>
           </div>
         </div>
@@ -468,7 +467,7 @@
       <button class="icon-button" id="productCloseBtn" type="button" aria-label="关闭产品说明" data-i18n-aria="aria.closeProduct">×</button>
     </div>
     <div class="crop-body">
-      <p class="product-intro" data-i18n="product.intro">豆格工坊社区版是在浏览器本地处理的开源拼豆图纸工具，不提供站内账号、付款、卡密或云端图片转换。</p>
+      <p class="product-intro" data-i18n="product.intro">拼豆工坊是在浏览器本地处理的拼豆图纸工具，不提供站内账号、付款、卡密或云端图片转换。</p>
       <div class="product-grid">
         <section class="product-card"><h3 data-i18n="product.stepsTitle">三步完成</h3><ol><li data-i18n="product.step1">上传图片，优先裁剪单个主体。</li><li data-i18n="product.step2">核对图案比例、实体底板、色数与颗数。</li><li data-i18n="product.step3">导出逐格色号施工图；大型图纸使用分页打印。</li></ol></section>
         <section class="product-card"><h3 data-i18n="product.privacyTitle">隐私与恢复</h3><p data-i18n="product.privacyText">原图不会上传项目服务器。未完成图纸会保存在本浏览器的本地存储中，且不包含参考原图；你可以随时清除。托管平台仍可能按其隐私政策处理基础访问与安全日志。</p></section>

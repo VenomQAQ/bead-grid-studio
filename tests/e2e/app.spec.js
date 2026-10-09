@@ -9,7 +9,7 @@ test('loads the full local-first editor without runtime errors', async ({ page }
   const errors = [];
   page.on('pageerror', (error) => errors.push(error.message));
   await page.goto('/?lang=zh-CN');
-  await expect(page).toHaveTitle(/豆格工坊/);
+  await expect(page).toHaveTitle(/拼豆工坊/);
   await expect(page.locator('#emptyUploadBtn')).toBeVisible();
   await expect(page.locator('#patternCanvas')).toBeVisible();
   expect(errors).toEqual([]);
@@ -19,7 +19,7 @@ test('built-in conversion regression suite passes', async ({ page }) => {
   const messages = [];
   page.on('console', (message) => messages.push(message.text()));
   await page.goto('/?lang=zh-CN&selftest=1');
-  await expect.poll(() => messages.find((message) => message.includes('豆格工坊自检通过'))).toMatch(/82 项/);
+  await expect.poll(() => messages.find((message) => message.includes('拼豆工坊自检通过'))).toMatch(/82 项/);
   expect(messages.filter((message) => message.includes('自检失败'))).toEqual([]);
 });
 
@@ -44,8 +44,8 @@ test('portable single-file release runs without a server', async ({ page }) => {
   const file = pathToFileURL(resolve(`release/bead-grid-studio-v${packageVersion}.html`));
   file.search = 'lang=zh-CN&selftest=1';
   await page.goto(file.href);
-  await expect(page).toHaveTitle(/豆格工坊/);
-  await expect.poll(() => messages.find((message) => message.includes('豆格工坊自检通过'))).toMatch(/82 项/);
+  await expect(page).toHaveTitle(/拼豆工坊/);
+  await expect.poll(() => messages.find((message) => message.includes('拼豆工坊自检通过'))).toMatch(/82 项/);
   expect(errors).toEqual([]);
 });
 

@@ -30,7 +30,8 @@
 
     * { box-sizing: border-box; }
 
-    [hidden] { display: none !important; }
+    [hidden],
+    [data-ui-hidden] { display: none !important; }
 
     html, body { height: 100%; }
 

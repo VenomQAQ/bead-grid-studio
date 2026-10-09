@@ -11,7 +11,7 @@
   <rect x="760" width="520" height="640" fill="url(#grid)" opacity=".62"/>
   <g font-family="Inter,Segoe UI,Microsoft YaHei,sans-serif">
     <text x="76" y="92" fill="#dc6b55" font-size="24" font-weight="700" letter-spacing="4">BEAD GRID STUDIO · OPEN SOURCE</text>
-    <text x="76" y="196" fill="#fffdf7" font-size="72" font-weight="800">豆格工坊</text>
+    <text x="76" y="196" fill="#fffdf7" font-size="72" font-weight="800">拼豆工坊</text>
     <text x="76" y="266" fill="#f4e0d6" font-size="34" font-weight="600">小网格也尽量保住轮廓与部件</text>
     <text x="76" y="326" fill="#aaa49b" font-size="25">Local-first · Topology-aware · Printable</text>
     <g transform="translate(76 394)">

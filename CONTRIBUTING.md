@@ -2,7 +2,7 @@
 
 [简体中文](#简体中文) · [English](#english)
 
-感谢你帮助 Bead Grid Studio / 豆格工坊变得更可靠、更容易使用。文档修正、翻译、测试、无障碍改进和小范围界面修复都属于有价值的贡献。
+感谢你帮助 Bead Grid Studio / 拼豆工坊变得更可靠、更容易使用。文档修正、翻译、测试、无障碍改进和小范围界面修复都属于有价值的贡献。
 
 Thank you for helping make Bead Grid Studio more reliable and easier to use. Documentation fixes, translations, tests, accessibility improvements, and focused interface fixes are all valuable contributions.
 

@@ -2800,7 +2800,7 @@ import {
       test('不足一成的占比保留一位小数',formatShare(3,380).label==='0.8%'&&formatShare(1,380).label==='0.3%');
 
       const failed=tests.filter(item=>!item.pass);
-      if(failed.length)console.error(`[豆格工坊自检失败] ${JSON.stringify(failed)}`);else console.info(`[豆格工坊自检通过] ${tests.length} 项`);
+      if(failed.length)console.error(`[拼豆工坊自检失败] ${JSON.stringify(failed)}`);else console.info(`[拼豆工坊自检通过] ${tests.length} 项`);
       return tests;
     }
 
@@ -3003,7 +3003,7 @@ import {
       setTool('brush');
       updateRecoveryUI();
       if(location.protocol==='https:'&&'serviceWorker' in navigator){
-        navigator.serviceWorker.register('./sw.js',{scope:'./'}).catch(error=>console.warn('[豆格工坊] 离线缓存注册失败',error));
+        navigator.serviceWorker.register('./sw.js',{scope:'./'}).catch(error=>console.warn('[拼豆工坊] 离线缓存注册失败',error));
       }
       if (new URLSearchParams(location.search).has('selftest')) runSelfTests();
     }
