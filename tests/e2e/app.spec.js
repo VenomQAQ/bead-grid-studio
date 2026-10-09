@@ -57,6 +57,7 @@ test('uploads a real image, converts at a smaller grid, and exports a constructi
 
   await expect.poll(async () => page.locator('#smartTitle').textContent()).toMatch(/^已生成/);
   await expect(page.locator('#convertOverlay')).not.toHaveClass(/is-visible/);
+  await page.locator('#sizeSection').evaluate((node) => { node.open = true; });
   await page.locator('[data-size="24"]').click();
   await expect.poll(async () => {
     const cols = Number(await page.locator('#gridCols').inputValue());
@@ -67,6 +68,7 @@ test('uploads a real image, converts at a smaller grid, and exports a constructi
   await expect(page.locator('#convertOverlay')).not.toHaveClass(/is-visible/);
 
   const downloadPromise = page.waitForEvent('download');
+  await page.locator('#outputSection').evaluate((node) => { node.open = true; });
   await page.locator('#exportPngBtn').click();
   const download = await downloadPromise;
   expect(download.suggestedFilename()).toMatch(/24x24\.png$/);

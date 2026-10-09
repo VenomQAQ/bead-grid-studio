@@ -9,20 +9,17 @@ async function waitForPattern(page) {
   await expect.poll(async () => Number((await page.locator('#totalBeads').textContent())?.replace(/\D/g, '') || 0)).toBeGreaterThan(0);
 }
 
-test('query locale overrides storage and a manual choice persists', async ({ page }) => {
-  await page.addInitScript(() => localStorage.setItem('bead-grid-studio:locale', 'zh-CN'));
+test('interface stays Chinese and language switching is disabled', async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem('bead-grid-studio:locale', 'en-US'));
   await page.goto('/?lang=en-US');
-  await expect(page.locator('html')).toHaveAttribute('lang', 'en-US');
-  await expect(page.locator('#trySampleBtn')).toHaveText(/Try a Sample/i);
-
-  await page.locator('[data-locale="zh-CN"]').click();
-  await expect(page.locator('html')).toHaveAttribute('lang', 'zh-CN');
-  await page.goto('/');
   await expect(page.locator('html')).toHaveAttribute('lang', 'zh-CN');
   await expect(page.locator('#trySampleBtn')).toHaveText(/试试示例/);
+  await expect(page.locator('.language-switcher')).toHaveCount(0);
+  await page.goto('/');
+  await expect(page.locator('html')).toHaveAttribute('lang', 'zh-CN');
 });
 
-test('browser language selects English on a clean first visit', async ({ page, context }) => {
+test('browser language does not override the locked Chinese interface', async ({ page, context }) => {
   await context.clearCookies();
   await page.addInitScript(() => {
     localStorage.removeItem('bead-grid-studio:locale');
@@ -30,11 +27,11 @@ test('browser language selects English on a clean first visit', async ({ page, c
     Object.defineProperty(navigator, 'language', { configurable: true, get: () => 'en-US' });
   });
   await page.goto('/');
-  await expect(page.locator('html')).toHaveAttribute('lang', 'en-US');
-  await expect(page.locator('#emptyUploadBtn')).toHaveText(/Choose Image/i);
+  await expect(page.locator('html')).toHaveAttribute('lang', 'zh-CN');
+  await expect(page.locator('#emptyUploadBtn')).toHaveText(/选择图片/);
 });
 
-test('English onboarding generates the bundled sample without network image upload', async ({ page }) => {
+test('Chinese onboarding generates the bundled sample without network image upload', async ({ page }) => {
   const shared = [];
   await page.addInitScript(() => {
     Object.defineProperty(navigator, 'share', {
@@ -46,7 +43,7 @@ test('English onboarding generates the bundled sample without network image uplo
     if (/rocket-badge/i.test(request.url())) shared.push(request.url());
   });
   await page.goto('/?lang=en-US');
-  await expect(page.locator('#heroTitle')).toHaveText('Image → Fuse Bead Pattern');
+  await expect(page.locator('#heroTitle')).toHaveText('图片 → 拼豆图纸');
   await page.locator('#trySampleBtn').click();
   await waitForPattern(page);
   expect(shared).toEqual([]);
@@ -55,21 +52,15 @@ test('English onboarding generates the bundled sample without network image uplo
 
   await page.locator('#readyShareBtn').click();
   await expect.poll(() => page.evaluate(() => window.__sharedPayload)).toMatchObject({
-    url: `${officialUrl}?lang=en-US`,
+    url: `${officialUrl}?lang=zh-CN`,
   });
   const payload = await page.evaluate(() => window.__sharedPayload);
-  expect(payload.title).toMatch(/Bead Grid Studio/);
-  expect(payload.text).toMatch(/fuse-bead pattern/i);
+  expect(payload.title).toMatch(/豆格工坊/);
+  expect(payload.text).toMatch(/拼豆图纸/);
 });
 
-test('English key interface contains no accidental Chinese UI', async ({ page }) => {
-  await page.goto('/?lang=en-US');
-  const selectors = [
-    '.topbar', '#controlPanel', '#emptyState', '#palettePanel', '#productDialog', '#cropDialog', '#shareDialog', '.mobile-dock',
-  ];
-  const text = await page.locator(selectors.join(',')).allTextContents();
-  const visibleCopy = text.join(' ').replace(/豆格工坊|中文|MARD/g, '');
-  expect(visibleCopy).not.toMatch(/[\u4e00-\u9fff]/);
+test('Chinese key interface has no missing translation keys', async ({ page }) => {
+  await page.goto('/');
   const exposedLabels = await page.locator('[aria-label],[title]').evaluateAll((nodes) => nodes.flatMap((node) => [
     node.getAttribute('aria-label'),
     node.getAttribute('title'),
@@ -134,7 +125,7 @@ test('making assistant tracks one color, survives recovery, and exports material
   await expect(page.locator('.stat-percent').first()).toBeVisible();
   await page.evaluate(() => Object.defineProperty(navigator,'clipboard',{configurable:true,value:{writeText:async text=>{window.__copiedMaterialList=text;}}}));
   await page.locator('#copyStatsBtn').click();
-  await expect.poll(() => page.evaluate(() => window.__copiedMaterialList || '')).toMatch(/Fuse bead shopping list[\s\S]+beads/);
+  await expect.poll(() => page.evaluate(() => window.__copiedMaterialList || '')).toMatch(/拼豆购豆清单[\s\S]+颗/);
 
   await page.locator('#readyMakeBtn').click();
   await expect(page.locator('#makingAssistant')).toBeVisible();
@@ -175,8 +166,8 @@ test('making assistant tracks one color, survives recovery, and exports material
   const download = await downloadPromise;
   expect(download.suggestedFilename()).toMatch(/-materials\.csv$/);
   const csv = await readFile(await download.path(), 'utf8');
-  expect(csv.replace(/^\uFEFF/, '')).toMatch(/^Code,Color name,Screen-reference HEX,Count,Completed\r?\n/);
-  expect(csv).toMatch(/,Yes\r?\n/);
+  expect(csv.replace(/^\uFEFF/, '')).toMatch(/^色号,颜色名称,屏幕参考 HEX,数量,制作完成\r?\n/);
+  expect(csv).toMatch(/,是\r?\n/);
 
   await page.reload();
   await expect(page.locator('#restoreDraftBtn')).toBeVisible();
@@ -187,6 +178,7 @@ test('making assistant tracks one color, survives recovery, and exports material
   await expect(page.locator('.stat-row.is-complete')).toHaveCount(1);
 
   page.once('dialog', dialog=>dialog.accept());
+  await page.locator('#sizeSection').evaluate((node) => { node.open = true; });
   await page.locator('[data-size="24"]').click();
   await expect(page.locator('#makingAssistant')).toBeHidden();
   await expect(page.locator('#totalBeads')).toHaveText('0');

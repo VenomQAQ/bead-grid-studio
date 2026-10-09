@@ -8,9 +8,9 @@ import {
   SUPPORTED_LOCALES,
 } from '../../src/i18n/index.js';
 
-test('supported locales include international languages and English is the default', () => {
+test('supported locales include international languages and Chinese is the default', () => {
   assert.deepEqual(SUPPORTED_LOCALES, ['en-US', 'ja-JP', 'ko-KR', 'fr-FR', 'zh-CN']);
-  assert.equal(DEFAULT_LOCALE, 'en-US');
+  assert.equal(DEFAULT_LOCALE, 'zh-CN');
 });
 
 test('browser locale variants normalize to the supported locales', () => {
@@ -28,5 +28,5 @@ test('locale resolution follows query, storage, browser, then default priority',
   assert.equal(resolveLocale({ query: 'ja', stored: 'en-US', languages: ['en-US'] }), 'ja-JP');
   assert.equal(resolveLocale({ stored: 'ko-KR', languages: ['en-US'] }), 'ko-KR');
   assert.equal(resolveLocale({ stored: 'de-DE', languages: ['fr-FR', 'zh-Hans'] }), 'fr-FR');
-  assert.equal(resolveLocale({ languages: ['de-DE'] }), 'en-US');
+  assert.equal(resolveLocale({ languages: ['de-DE'] }), 'zh-CN');
 });

@@ -402,7 +402,7 @@ const zhCN = {
   'smart.generatedReview': '已生成，请核对后导出',
   'smart.trimmed': '已安全去除外围纯白空白约 {percent}%，可随时恢复完整原图。',
   'smart.detailWarning': '{warning}；建议升到 {size} 格或用画笔补。',
-  'smart.readySummary': '{size} · {beads} 颗豆 · {colors} 色 · 原图比例未拉伸。{framing}{detailWarning} 按 {beadMm}mm 豆约 {width}×{height}cm。用料总数严格等于所有非空格；制作前请核对实物色卡。',
+  'smart.readySummary': '{size} · {beads} 颗豆 · {colors} 色 · 原图比例未拉伸。按 {beadMm}mm 豆约 {width}×{height}cm。',
   'smart.regenerate': '重新智能生成',
   'smart.customTooSmall': '自定义尺寸过小，只能保留大轮廓',
   'smart.customAspect': '自定义尺寸与原图比例不一致',

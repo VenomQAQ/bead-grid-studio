@@ -657,7 +657,7 @@ export function quantizePixels(payload) {
     }
   }
 
-  const fineMatching = processMode === 'photo' || processMode === 'detail' || processMode === 'pixel';
+  const fineMatching = processMode !== 'document';
   const nearestCache = fineMatching ? new Map() : null;
   const coarseCache = fineMatching ? null : new Int16Array(65536).fill(-1);
 
@@ -705,9 +705,19 @@ export function quantizePixels(payload) {
 
     let choice = candidates[0]?.position ?? 0;
     let distance = Infinity;
+    const sourceChroma = Math.hypot(lab[1], lab[2]);
     for (const candidate of candidates) {
       const i = candidate.position;
-      const d = palette[i].cieLab ? cieDelta(cieLab, palette[i].cieLab) : candidate.rough * 100;
+      let d = palette[i].cieLab ? cieDelta(cieLab, palette[i].cieLab) : candidate.rough * 100;
+      const paletteChroma = Math.hypot(palette[i].lab[1], palette[i].lab[2]);
+      if (sourceChroma >= 0.05 && paletteChroma >= 0.04) {
+        const hueGap = Math.abs(Math.atan2(
+          Math.sin(Math.atan2(lab[2], lab[1]) - Math.atan2(palette[i].lab[2], palette[i].lab[1])),
+          Math.cos(Math.atan2(lab[2], lab[1]) - Math.atan2(palette[i].lab[2], palette[i].lab[1])),
+        ));
+        d += hueGap * 12 * Math.min(sourceChroma, paletteChroma);
+        d += Math.abs(lab[0] - palette[i].lab[0]) * 5;
+      }
       if (d < distance - 1e-12 || (Math.abs(d - distance) < 1e-12 && palette[i].index < palette[choice].index)) {
         distance = d;
         choice = i;
@@ -731,6 +741,7 @@ export function quantizePixels(payload) {
   const detailValid = detailMode ? new Uint8Array(cols * rows) : null;
   const detailNeutralDark = detailMode ? new Uint8Array(cols * rows) : null;
   const detailWhite = detailMode ? new Uint8Array(cols * rows) : null;
+  const detailVote = detailMode ? new Int16Array(cols * rows).fill(-1) : null;
   const documentInkThreshold = Math.max(100, Math.min(170, darkThreshold + 35));
   const stepX = width / cols;
   const stepY = height / rows;
@@ -775,12 +786,17 @@ export function quantizePixels(payload) {
       let lg = 0;
       let lb = 0;
       let totalWeight = 0;
+      let cr = 0;
+      let cg = 0;
+      let cb = 0;
+      let chromaTotal = 0;
       let darkLr = 0;
       let darkLg = 0;
       let darkLb = 0;
       let darkWeight = 0;
       let valid = 0;
       let outlineSamples = 0;
+      let darkFeatureSamples = 0;
       let lineCoreSamples = 0;
       let lineSoftSamples = 0;
       let lineBackgroundSamples = 0;
@@ -805,6 +821,8 @@ export function quantizePixels(payload) {
       const documentPreviousRow = documentMode ? new Uint8Array(samplesX) : null;
       const outlineRowHits = new Uint8Array(samplesY);
       const outlineColHits = new Uint8Array(samplesX);
+      const darkRowHits = new Uint8Array(samplesY);
+      const darkColHits = new Uint8Array(samplesX);
       scores.fill(0);
       featureScores.fill(0);
       rawScores.fill(0);
@@ -859,6 +877,14 @@ export function quantizePixels(payload) {
             lg += gLinear * weight;
             lb += bLinear * weight;
             totalWeight += weight;
+            const chromaWeight = weight * (0.2 + saturation);
+            cr += rLinear * chromaWeight;
+            cg += gLinear * chromaWeight;
+            cb += bLinear * chromaWeight;
+            chromaTotal += chromaWeight;
+            const mapped = nearestPalettePosition(r, g, b);
+            scores[mapped] += weight * (1 + 1.6 * saturation);
+            rawScores[mapped] += weight;
             if (detailMode && lum <= 105) {
               darkLr += rLinear * weight;
               darkLg += gLinear * weight;
@@ -915,6 +941,8 @@ export function quantizePixels(payload) {
 
           const pixelIsChromatic = visiblyChromaticRgb(r, g, b);
           const exactChoice = exactPalettePosition.get((r << 16) | (g << 8) | b);
+          const neighborMax = Math.max(left, right, up, down);
+          const isDarkCrease = lum <= 150 && neighborMax - lum >= 18 && gradient >= 20;
           const isOutline = exactChoice === outlinePalettePosition
             || (exactChoice === undefined && !pixelIsChromatic && lum <= outlineCutoff);
           const choice = isOutline
@@ -928,6 +956,12 @@ export function quantizePixels(payload) {
             outlineSamples += sampleArea;
             outlineRowHits[syi] = 1;
             outlineColHits[sxi] = 1;
+            maxOutlineGradient = Math.max(maxOutlineGradient, gradient);
+          } else if (isDarkCrease) {
+            factor = 2.2 + Math.min(1.6, (neighborMax - lum) / 48);
+            darkFeatureSamples += sampleArea;
+            darkRowHits[syi] = 1;
+            darkColHits[sxi] = 1;
             maxOutlineGradient = Math.max(maxOutlineGradient, gradient);
           } else if (saturation > 0.25) {
             factor = 1.45 + 1.25 * saturation + Math.min(0.7, gradient / 180);
@@ -1015,22 +1049,53 @@ export function quantizePixels(payload) {
         let meanR = lr / totalWeight;
         let meanG = lg / totalWeight;
         let meanB = lb / totalWeight;
-        if (detailMode && darkWeight / totalWeight >= 0.24) {
+        if (detailMode && darkWeight / totalWeight >= 0.10) {
           const darkR = darkLr / darkWeight;
           const darkG = darkLg / darkWeight;
           const darkB = darkLb / darkWeight;
           const meanLum = 0.2126 * linearSrgb(meanR) + 0.7152 * linearSrgb(meanG) + 0.0722 * linearSrgb(meanB);
           const darkLum = 0.2126 * linearSrgb(darkR) + 0.7152 * linearSrgb(darkG) + 0.0722 * linearSrgb(darkB);
-          if (meanLum - darkLum >= 18) {
-            const strength = Math.min(0.55, 0.18 + (darkWeight / totalWeight - 0.24) * 0.9);
+          if (meanLum - darkLum >= 14) {
+            const strength = Math.min(0.72, 0.28 + (darkWeight / totalWeight) * 1.15);
             meanR = meanR * (1 - strength) + darkR * strength;
             meanG = meanG * (1 - strength) + darkG * strength;
             meanB = meanB * (1 - strength) + darkB * strength;
           }
         }
+        if (chromaTotal > 0.02) {
+          const chromaR = cr / chromaTotal;
+          const chromaG = cg / chromaTotal;
+          const chromaB = cb / chromaTotal;
+          const meanRgb = [linearSrgb(meanR), linearSrgb(meanG), linearSrgb(meanB)];
+          const chromaRgb = [linearSrgb(chromaR), linearSrgb(chromaG), linearSrgb(chromaB)];
+          const meanSpread = Math.max(...meanRgb) - Math.min(...meanRgb);
+          const chromaSpread = Math.max(...chromaRgb) - Math.min(...chromaRgb);
+          if (chromaSpread >= meanSpread * 1.05 + 3) {
+            meanR = chromaR;
+            meanG = chromaG;
+            meanB = chromaB;
+          }
+        }
         const r = Math.round(linearSrgb(meanR));
         const g = Math.round(linearSrgb(meanG));
         const b = Math.round(linearSrgb(meanB));
+        let voteChoice = -1;
+        let voteBest = 0;
+        let voteSecond = 0;
+        let voteMass = 0;
+        for (let i = 0; i < scores.length; i++) {
+          voteMass += rawScores[i];
+          if (scores[i] > voteBest + 1e-12) {
+            voteSecond = voteBest;
+            voteBest = scores[i];
+            voteChoice = i;
+          } else if (scores[i] > voteSecond) voteSecond = scores[i];
+        }
+        const voteShare = voteChoice >= 0 && voteMass > 0 ? rawScores[voteChoice] / voteMass : 0;
+        const keepLocalColor = voteChoice >= 0
+          && paletteChromatic[voteChoice]
+          && voteShare >= 0.32
+          && voteBest >= voteSecond * 1.12;
         if (detailMode) {
           detailR[cell] = r;
           detailG[cell] = g;
@@ -1039,8 +1104,9 @@ export function quantizePixels(payload) {
           detailWhite[cell] = highConfidenceWhite ? 1 : 0;
           const meanLab = rgbLab(r, g, b);
           detailNeutralDark[cell] = protectDark && meanLab[0] < 0.55 && Math.hypot(meanLab[1], meanLab[2]) < 0.03 && !darkPixelIsChromatic(r, g, b, meanLab[0]) ? 1 : 0;
+          detailVote[cell] = keepLocalColor ? voteChoice : -1;
         } else {
-          grid[cell] = palette[highConfidenceWhite ? whitePalettePosition : nearestPalettePosition(r, g, b)].index;
+          grid[cell] = palette[highConfidenceWhite ? whitePalettePosition : (keepLocalColor ? voteChoice : nearestPalettePosition(r, g, b))].index;
         }
         cellImportance[cell] = 1;
       } else {
@@ -1069,6 +1135,23 @@ export function quantizePixels(payload) {
               }
             }
             if (alternative >= 0 && alternativeScore > 0) choice = alternative;
+          }
+        }
+        if (!highConfidenceWhite && darkFeatureSamples / valid >= 0.07) {
+          const fillLab = palette[choice].lab;
+          let crease = -1;
+          let creaseScore = -1;
+          for (let i = 0; i < scores.length; i++) {
+            if (rawScores[i] / valid < 0.07) continue;
+            if (palette[i].lab[0] + 0.05 < fillLab[0] && scores[i] > creaseScore) {
+              crease = i;
+              creaseScore = scores[i];
+            }
+          }
+          const darkRowCont = darkRowHits.reduce((sum, value) => sum + value, 0) / samplesY;
+          const darkColCont = darkColHits.reduce((sum, value) => sum + value, 0) / samplesX;
+          if (crease >= 0 && (Math.max(darkRowCont, darkColCont) >= 0.28 || darkFeatureSamples / valid >= 0.14)) {
+            choice = crease;
           }
         }
         grid[cell] = palette[choice].index;
@@ -1248,6 +1331,12 @@ export function quantizePixels(payload) {
           cellImportance[cell] = 1;
           continue;
         }
+        if (detailVote[cell] >= 0) {
+          grid[cell] = palette[detailVote[cell]].index;
+          cellSupport[cell] = 1;
+          cellImportance[cell] = 1.2;
+          continue;
+        }
         let nr = 0;
         let ng = 0;
         let nb = 0;
@@ -1339,6 +1428,8 @@ export function quantizePixels(payload) {
         }
       }
       if (bestCount >= component.length + 2) {
+        const replacementLab = entryByIndex.get(replacement)?.lab;
+        if (replacementLab && lab[0] + 0.05 < replacementLab[0]) continue;
         for (const position of component) grid[position] = replacement;
       }
     }
@@ -1359,6 +1450,19 @@ export function quantizePixels(payload) {
     return Math.hypot(lab[1], lab[2]);
   };
   const colorIsChromatic = (index) => Boolean(paletteChromatic[palettePositionByIndex.get(index)]);
+  const hueAwareDistance = (a, b) => {
+    const labA = colorLab(a);
+    const labB = colorLab(b);
+    let distance = labDistance(labA, labB);
+    const chromaA = Math.hypot(labA[1], labA[2]);
+    const chromaB = Math.hypot(labB[1], labB[2]);
+    if (chromaA >= 0.045 && chromaB >= 0.045) {
+      const hue = Math.abs(Math.atan2(Math.sin(Math.atan2(labA[2], labA[1]) - Math.atan2(labB[2], labB[1])), Math.cos(Math.atan2(labA[2], labA[1]) - Math.atan2(labB[2], labB[1]))));
+      distance += hue * 0.42 * Math.min(chromaA, chromaB);
+      distance += Math.abs(labA[0] - labB[0]) * 0.22;
+    }
+    return distance;
+  };
   const colorPriority = (index) => {
     const entry = entryByIndex.get(index);
     const count = counts.get(index) || 0;
@@ -1392,10 +1496,10 @@ export function quantizePixels(payload) {
     for (const index of saturated) {
       const lab = colorLab(index);
       const hue = Math.atan2(lab[2], lab[1]);
-      if (hues.every((old) => Math.abs(Math.atan2(Math.sin(hue - old), Math.cos(hue - old))) > 0.55)) {
+      if (hues.every((old) => Math.abs(Math.atan2(Math.sin(hue - old), Math.cos(hue - old))) > 0.42)) {
         anchors.add(index);
         hues.push(hue);
-        if (hues.length === 3) break;
+        if (hues.length === 6) break;
       }
     }
   }
@@ -1411,7 +1515,7 @@ export function quantizePixels(payload) {
           const a = active[i];
           const b = active[j];
           if (colorIsChromatic(a) !== colorIsChromatic(b)) continue;
-          const distance = labDistance(colorLab(a), colorLab(b));
+          const distance = hueAwareDistance(a, b);
           if (distance >= threshold || (anchors.has(a) && anchors.has(b))) continue;
           if (distance < bestDistance - 1e-12) {
             bestDistance = distance;
@@ -1452,7 +1556,7 @@ export function quantizePixels(payload) {
       for (const other of active) {
         if (other !== candidate) {
           if (colorIsChromatic(candidate) !== colorIsChromatic(other)) continue;
-          const distance = labDistance(colorLab(candidate), colorLab(other));
+          const distance = hueAwareDistance(candidate, other);
           if (distance < nearestDistance - 1e-12 || (Math.abs(distance - nearestDistance) < 1e-12 && other < nearest)) {
             nearestDistance = distance;
             nearest = other;

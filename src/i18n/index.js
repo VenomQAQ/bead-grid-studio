@@ -4,7 +4,7 @@ import jaJP from './ja-JP.js';
 import koKR from './ko-KR.js';
 import zhCN from './zh-CN.js';
 
-export const DEFAULT_LOCALE = 'en-US';
+export const DEFAULT_LOCALE = 'zh-CN';
 export const SUPPORTED_LOCALES = Object.freeze(['en-US', 'ja-JP', 'ko-KR', 'fr-FR', 'zh-CN']);
 export const LOCALE_STORAGE_KEY = 'bead-grid-studio:locale';
 
@@ -55,7 +55,7 @@ function browserLocale() {
   return DEFAULT_LOCALE;
 }
 
-let activeLocale = queryLocale() || storedLocale() || browserLocale();
+let activeLocale = DEFAULT_LOCALE;
 
 export function getLocale() {
   return activeLocale;
@@ -156,23 +156,12 @@ export function applyDocumentTranslations(root = document) {
   }
 }
 
-export function setLocale(locale, { persist = true, updateUrl = true } = {}) {
-  const normalized = normalizeLocale(locale);
-  if (!normalized || normalized === activeLocale) return false;
-  activeLocale = normalized;
-  if (persist) {
-    try { localStorage.setItem(LOCALE_STORAGE_KEY, activeLocale); } catch (_) { /* Storage may be disabled. */ }
-  }
-  if (updateUrl && location.protocol !== 'file:') {
-    try {
-      const url = new URL(location.href);
-      url.searchParams.set('lang', activeLocale);
-      history.replaceState(history.state, '', url);
-    } catch (_) { /* Keep the current URL when history is unavailable. */ }
-  }
+export function setLocale() {
+  if (activeLocale === DEFAULT_LOCALE) return false;
+  activeLocale = DEFAULT_LOCALE;
   applyDocumentTranslations();
   listeners.forEach((listener) => listener(activeLocale));
-  return true;
+  return false;
 }
 
 export function onLocaleChange(listener) {

@@ -22,7 +22,6 @@ import {
   initializeI18n,
   localizedAppUrl,
   onLocaleChange,
-  setLocale,
   t,
 } from './i18n/index.js';
 
@@ -70,7 +69,7 @@ import {
       zoom: 1,
       paletteMode: 'mard221',
       paletteSeries: 'all',
-      maxColors: 32,
+      maxColors: 48,
       majorGridStep: 10,
       mergeStrength: 10,
       protectDark: true,
@@ -384,7 +383,7 @@ import {
       return {
         cols:grid.cols,rows:grid.rows,capacity:grid.cols*grid.rows,
         processMode:documentMode?'document':photoMode?'detail':'cartoon',
-        fitMode:'contain',whiteMode:'auto',maxColors:documentMode?24:photoMode?48:lineArtMode?16:32,mergeStrength:2,protectDark:true,
+        fitMode:'contain',whiteMode:'auto',maxColors:documentMode?24:photoMode?56:lineArtMode?16:48,mergeStrength:2,protectDark:true,
         paletteMode:'mard221',previewMode:'square',showGrid:true,showCodes:true,
         structuralOnly:Boolean(documentMode&&grid.structuralOnly)
       };
@@ -586,44 +585,26 @@ import {
     }
 
     function updateSmartCard() {
-      if(!state.referenceImage){els.smartCard.hidden=true;return;}
+      if(!state.referenceImage){els.smartCard.hidden=true;els.smartGenerateBtn.hidden=true;return;}
       els.smartCard.hidden=false;
+      els.smartGenerateBtn.hidden=false;
       els.restoreFullImageBtn.hidden=!state.autoTrimApplied;
+      els.smartExportBtn.hidden=true;
+      els.smartAdvancedBtn.hidden=true;
       const settings=currentSmartSettings(),stats=getStats();
-      const actualReady=state.smartPhase==='done'&&state.smartMode&&stats.total>0;
       if(settings.structuralOnly){
         els.smartTitle.textContent=t('smart.documentUnreadable');
         els.smartSummary.textContent=t('smart.documentSummary',{cols:settings.cols,rows:settings.rows});
         els.smartGenerateBtn.textContent=t('smart.cropFirst');els.smartGenerateBtn.dataset.action='crop';
-        els.smartExportBtn.hidden=true;
-      }else if(actualReady){
-        const smallLineReady=Boolean(state.sourceAnalysis?.likelyLineArt)&&Math.max(state.cols,state.rows)<=60;
-        const issues=lineDetailIssues();
-        els.smartTitle.textContent=issues.total?t('smart.generatedWithWarning',{warning:lineDetailWarningCopy(issues,{short:true})}):t(smallLineReady?'smart.generatedSmallLine':'smart.generatedReview');
+      }else if(stats.total>0){
         const pattern=currentPatternPlacement(),beadCm=currentBeadMm()/10,sizeCopy=localizedPatternSize(pattern);
-        const framing=state.autoTrimApplied?t('smart.trimmed',{percent:Math.round(state.autoTrimFraction*100)}):'';
-        const nextSide=[24,32,40,48,60].find(side=>side>Math.max(pattern.cols,pattern.rows))||Math.min(160,Math.max(pattern.cols,pattern.rows)+16);
-        const detailWarning=issues.total?t('smart.detailWarning',{warning:lineDetailWarningCopy(issues),size:nextSide}):'';
-        els.smartSummary.textContent=t('smart.readySummary',{size:sizeCopy,beads:formatNumber(stats.total),colors:stats.counts.size,framing,detailWarning,beadMm:currentBeadMm(),width:(state.cols*beadCm).toFixed(1),height:(state.rows*beadCm).toFixed(1)});
-        els.smartGenerateBtn.textContent=t('smart.regenerate');els.smartGenerateBtn.dataset.action='generate';
-        els.smartExportBtn.hidden=false;
-      }else if(!state.smartMode){
-        const quality=currentQualityAssessment(),issues=lineDetailIssues();
-        els.smartTitle.textContent=issues.total?lineDetailWarningCopy(issues,{short:true}):t(quality.severeDetail?'smart.customTooSmall':quality.aspectWarning?'smart.customAspect':'smart.custom');
-        els.smartSummary.textContent=issues.total
-          ? t('smart.customIssues',{cols:state.cols,rows:state.rows,warning:lineDetailWarningCopy(issues)})
-          : quality.severeDetail
-          ? t('smart.customCapacity',{cols:state.cols,rows:state.rows,cells:formatNumber(Math.round(quality.effectiveCells))})
-          : quality.aspectWarning
-            ? t('smart.customMismatch',{effect:t(els.fitMode.value==='contain'?'quality.marginVerb':'quality.cropVerb'),percent:(quality.fit.mismatch*100).toFixed(1)})
-            : t('smart.customSummary',{cols:state.cols,rows:state.rows,colors:state.maxColors});
-        els.smartGenerateBtn.textContent=t('smart.restore');els.smartGenerateBtn.dataset.action='generate';
-        els.smartExportBtn.hidden=stats.total===0||quality.severeDetail||quality.aspectWarning;
+        els.smartTitle.textContent=t('smart.generatedReview');
+        els.smartSummary.textContent=t('smart.readySummary',{size:sizeCopy,beads:formatNumber(stats.total),colors:stats.counts.size,framing:'',detailWarning:'',beadMm:currentBeadMm(),width:(state.cols*beadCm).toFixed(1),height:(state.rows*beadCm).toFixed(1)});
+        els.smartGenerateBtn.textContent=t(state.smartMode?'smart.regenerate':'smart.restore');els.smartGenerateBtn.dataset.action='generate';
       }else{
         els.smartTitle.textContent=t('smart.recommendedReady');
         els.smartSummary.textContent=t('smart.recommendedSummary',{cols:settings.cols,rows:settings.rows,capacity:formatNumber(settings.capacity),colors:settings.maxColors,trimmed:state.autoTrimApplied?t('smart.trimmedShort',{percent:Math.round(state.autoTrimFraction*100)}):''});
         els.smartGenerateBtn.textContent=t('smart.generate');els.smartGenerateBtn.dataset.action='generate';
-        els.smartExportBtn.hidden=true;
       }
     }
 
@@ -2293,7 +2274,7 @@ import {
         state.selectedColor=legacy?(PALETTE.find(color=>color.code==='H7')?.index??0):(colorByCode.get(settings.selectedColorCode)??Math.round(clamp(settings.selectedColor??0,0,PALETTE.length-1)));
         state.previewMode=['square','bead'].includes(settings.previewMode)?settings.previewMode:'square';
         state.showGrid=settings.showGrid!==false;state.showRulers=settings.showRulers!==false;state.showCodes=Boolean(settings.showCodes);
-        state.zoom=clamp(settings.zoom??1,.0625,2);state.paletteMode='mard221';state.paletteSeries='all';state.maxColors=Math.round(clamp(settings.maxColors??32,2,64));state.mergeStrength=Math.round(clamp(settings.mergeStrength??10,0,30));state.protectDark=settings.protectDark!==false;state.sizeMode=settings.sizeMode==='board'?'board':'pattern';state.aspectLock=settings.aspectLock!==false;state.boardProfile=BOARD_PROFILES[settings.boardProfile]?settings.boardProfile:'mini52';state.boardTilesX=Math.max(1,Math.round(settings.boardTilesX||1));state.boardTilesY=Math.max(1,Math.round(settings.boardTilesY||1));state.majorGridStep=[5,10,29].includes(Number(settings.majorGridStep))?Number(settings.majorGridStep):10;
+        state.zoom=clamp(settings.zoom??1,.0625,2);state.paletteMode='mard221';state.paletteSeries='all';state.maxColors=Math.round(clamp(settings.maxColors??48,2,64));state.mergeStrength=Math.round(clamp(settings.mergeStrength??10,0,30));state.protectDark=settings.protectDark!==false;state.sizeMode=settings.sizeMode==='board'?'board':'pattern';state.aspectLock=settings.aspectLock!==false;state.boardProfile=BOARD_PROFILES[settings.boardProfile]?settings.boardProfile:'mini52';state.boardTilesX=Math.max(1,Math.round(settings.boardTilesX||1));state.boardTilesY=Math.max(1,Math.round(settings.boardTilesY||1));state.majorGridStep=[5,10,29].includes(Number(settings.majorGridStep))?Number(settings.majorGridStep):10;
         const making=project.making||{},completedCodes=Array.isArray(making.completedColorCodes)?making.completedColorCodes:[];
         state.completedColorCodes=new Set(completedCodes.filter(code=>typeof code==='string'&&colorByCode.has(code)));
         state.makingFocusColor=typeof making.focusColorCode==='string'?(colorByCode.get(making.focusColorCode)??null):null;state.makingMode=false;state.makingShowAll=false;
@@ -2399,7 +2380,7 @@ import {
       mobilePanelTrigger=document.activeElement instanceof HTMLElement?document.activeElement:null;
       document.querySelectorAll('.side-panel').forEach(item=>item.dataset.mobileOpen='false');
       document.querySelectorAll('[data-mobile-target]').forEach(btn=>btn.setAttribute('aria-pressed','false'));
-      if(panel){panel.dataset.mobileOpen='true';els.mobileScrim.classList.add('is-visible');const button=document.querySelector(`[data-mobile-target="${targetId}"]`);button?.setAttribute('aria-pressed','true');syncMobilePanelInert();requestAnimationFrame(()=>{panel.querySelector('.sheet-close')?.focus();if(section!==panel)section.scrollIntoView({block:'start'});});}
+      if(panel){if(section instanceof HTMLDetailsElement)section.open=true;panel.dataset.mobileOpen='true';els.mobileScrim.classList.add('is-visible');const button=document.querySelector(`[data-mobile-target="${targetId}"]`);button?.setAttribute('aria-pressed','true');syncMobilePanelInert();requestAnimationFrame(()=>{panel.querySelector('.sheet-close')?.focus();if(section!==panel)section.scrollIntoView({block:'start'});});}
     }
 
     function closeMobilePanels({restoreFocus=true}={}){const hadOpen=[...document.querySelectorAll('.side-panel')].some(item=>item.dataset.mobileOpen==='true');document.querySelectorAll('.side-panel').forEach(item=>item.dataset.mobileOpen='false');document.querySelectorAll('[data-mobile-target]').forEach(btn=>btn.setAttribute('aria-pressed','false'));els.mobileScrim.classList.remove('is-visible');syncMobilePanelInert();if(hadOpen&&restoreFocus)requestAnimationFrame(()=>mobilePanelTrigger?.focus?.());}
@@ -2629,7 +2610,7 @@ import {
       const recommendation=recommendDocumentGrid({width:5680,height:5568,maxSide:100,analysis:{likelyDocument:true,medianGlyphHeightPx:28}});
       test('论文尺寸建议保持比例并诚实标记不可读',recommendation.cols===100&&recommendation.rows===98&&recommendation.requiredTextLongSide===812&&!recommendation.textReadable&&recommendation.structuralOnly);
       const portraitSmart=recommendAutoHdSettings({width:3680,height:6528,analysis:{likelyPhoto:true,likelyDocument:false},quality:'ultra'});
-      test('一键高清为竖版照片保持比例并使用160格长边',portraitSmart.cols===90&&portraitSmart.rows===160&&portraitSmart.processMode==='detail'&&portraitSmart.maxColors===48&&portraitSmart.protectDark);
+      test('一键高清为竖版照片保持比例并使用160格长边',portraitSmart.cols===90&&portraitSmart.rows===160&&portraitSmart.processMode==='detail'&&portraitSmart.maxColors===56&&portraitSmart.protectDark);
       const cartoonSmart=recommendAutoHdSettings({width:800,height:800,analysis:{likelyPhoto:false,likelyDocument:false},quality:'ultra'});
       test('一键高清为卡通采用120格轮廓方案',cartoonSmart.cols===120&&cartoonSmart.rows===120&&cartoonSmart.processMode==='cartoon');
       const lineArtSmart=recommendAutoHdSettings({width:530,height:580,analysis:{likelyPhoto:false,likelyDocument:false,likelyLineArt:true},quality:'ultra'});
@@ -2839,13 +2820,6 @@ import {
       const openImage=()=>els.imageInput.click();
       [els.topUploadBtn,els.emptyUploadBtn].filter(Boolean).forEach(button=>button.addEventListener('click',openImage));
       [els.trySampleBtn,els.panelTrySampleBtn].filter(Boolean).forEach(button=>button.addEventListener('click',loadSampleImage));
-      document.querySelectorAll('[data-locale]').forEach(button=>{
-        button.addEventListener('click',()=>setLocale(button.dataset.locale));
-        button.addEventListener('keydown',event=>{
-          if(!['ArrowLeft','ArrowRight'].includes(event.key))return;event.preventDefault();
-          const buttons=[...document.querySelectorAll('[data-locale]')],current=buttons.indexOf(button),direction=event.key==='ArrowRight'?1:-1,next=buttons[(current+direction+buttons.length)%buttons.length];next.focus();setLocale(next.dataset.locale);
-        });
-      });
       onLocaleChange(refreshLocalizedUi);
       els.dropzone.addEventListener('click',openImage);
       els.dropzone.addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();openImage();}});

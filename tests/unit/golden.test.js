@@ -29,8 +29,8 @@ const GOLDEN_BASELINES = [
     mode: 'cartoon',
     expectedBeads: 576,
     expectedColors: 4,
-    expectedHash: 'c7adfa93568f8c16',
-    expectedTopColor: 'B1',
+    expectedHash: '817c495a7587a8b0',
+    expectedTopColor: 'A14',
   },
   {
     file: 'low-color-mono.png',
@@ -39,7 +39,7 @@ const GOLDEN_BASELINES = [
     mode: 'cartoon',
     expectedBeads: 400,
     expectedColors: 3,
-    expectedHash: '979c2826cfb349a0',
+    expectedHash: 'a1b599ab260b010c',
     expectedTopColor: 'H7',
   },
   {
@@ -58,9 +58,9 @@ const GOLDEN_BASELINES = [
     rows: 8,
     mode: 'cartoon',
     expectedBeads: 256,
-    expectedColors: 3,
-    expectedHash: '5b93de5747aaed67',
-    expectedTopColor: 'D6',
+    expectedColors: 4,
+    expectedHash: 'e025e33285c83784',
+    expectedTopColor: 'C7',
   },
   {
     file: 'monochrome-solid.png',
@@ -79,7 +79,7 @@ const GOLDEN_BASELINES = [
     mode: 'photo',
     expectedBeads: 576,
     expectedColors: 32,
-    expectedHash: 'c52ad477f933c851',
+    expectedHash: 'a4ae7cfacb0dae0c',
     expectedTopColor: 'B6',
   },
   {

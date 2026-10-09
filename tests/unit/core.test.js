@@ -187,6 +187,77 @@ test('pattern: legacy version 1 migration maps correctly to MARD-compatible colo
   assert.equal(migrated.grid.cells[0], 'H2');
 });
 
+test('quantize: a thin dark crease on a yellow fill is kept in cartoon mode', () => {
+  const yellow = [255, 210, 72];
+  const mouth = [120, 70, 40];
+  const width = 24;
+  const height = 16;
+  const data = new Uint8ClampedArray(width * height * 4);
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const i = (y * width + x) * 4;
+      const color = y >= 7 && y <= 8 ? mouth : yellow;
+      data[i] = color[0];
+      data[i + 1] = color[1];
+      data[i + 2] = color[2];
+      data[i + 3] = 255;
+    }
+  }
+  const palette = [
+    { index: 0, code: 'A4', rgb: yellow, lab: rgbToOklab(yellow), cieLab: rgbToCielab(yellow) },
+    { index: 1, code: 'F10', rgb: mouth, lab: rgbToOklab(mouth), cieLab: rgbToCielab(mouth) },
+  ];
+  const result = quantizePixels({
+    data,
+    width,
+    height,
+    cols: 6,
+    rows: 4,
+    palette,
+    maxColors: 2,
+    whiteMode: 'keep',
+    processMode: 'cartoon',
+    mergeStrength: 0,
+    protectDark: true,
+  });
+  assert.ok(Array.from(result.cells).includes(1), 'mouth crease should occupy at least one cell');
+});
+
+test('quantize: a mostly yellow cell with brown shadow stays in the yellow family', () => {
+  const yellow = [255, 210, 72];
+  const brown = [168, 96, 48];
+  const data = new Uint8ClampedArray(8 * 8 * 4);
+  for (let y = 0; y < 8; y++) {
+    for (let x = 0; x < 8; x++) {
+      const i = (y * 8 + x) * 4;
+      const color = y < 6 ? yellow : brown;
+      data[i] = color[0];
+      data[i + 1] = color[1];
+      data[i + 2] = color[2];
+      data[i + 3] = 255;
+    }
+  }
+  const palette = [
+    { index: 0, code: 'A4', rgb: yellow, lab: rgbToOklab(yellow), cieLab: rgbToCielab(yellow) },
+    { index: 1, code: 'A10', rgb: [247, 124, 49], lab: rgbToOklab([247, 124, 49]), cieLab: rgbToCielab([247, 124, 49]) },
+    { index: 2, code: 'F10', rgb: [138, 69, 38], lab: rgbToOklab([138, 69, 38]), cieLab: rgbToCielab([138, 69, 38]) },
+  ];
+  const result = quantizePixels({
+    data,
+    width: 8,
+    height: 8,
+    cols: 1,
+    rows: 1,
+    palette,
+    maxColors: 3,
+    whiteMode: 'keep',
+    processMode: 'detail',
+    mergeStrength: 0,
+    protectDark: true,
+  });
+  assert.equal(result.cells[0], 0);
+});
+
 test('quantize handles edge case inputs gracefully without throwing', () => {
   const empty = quantizePixels({
     data: null,

@@ -432,7 +432,7 @@ export function recommendAutoHdSettings({ width, height, analysis, quality = 'ul
     processMode: documentMode ? 'document' : photoMode ? 'detail' : 'cartoon',
     fitMode: 'contain',
     whiteMode: 'auto',
-    maxColors: documentMode ? 24 : photoMode ? 48 : lineArtMode ? 16 : 32,
+    maxColors: documentMode ? 24 : photoMode ? 56 : lineArtMode ? 16 : 48,
     mergeStrength: 2,
     protectDark: true,
     paletteMode: 'mard221',

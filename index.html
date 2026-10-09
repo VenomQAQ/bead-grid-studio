@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -55,17 +55,6 @@
 
       <div class="top-actions">
         <button class="button secondary top-hide-mobile" id="topUploadBtn" type="button" data-i18n="action.chooseImage">Choose Image</button>
-        <div class="language-switcher" role="group" aria-label="Interface language" data-i18n-aria="language.label">
-          <button type="button" data-locale="en-US" aria-pressed="true" title="EN" data-i18n="language.english" data-i18n-title="language.english">EN</button>
-          <span aria-hidden="true">/</span>
-          <button type="button" data-locale="ja-JP" aria-pressed="false" title="JA" data-i18n="language.japanese" data-i18n-title="language.japanese">JA</button>
-          <span aria-hidden="true">/</span>
-          <button type="button" data-locale="ko-KR" aria-pressed="false" title="KO" data-i18n="language.korean" data-i18n-title="language.korean">KO</button>
-          <span aria-hidden="true">/</span>
-          <button type="button" data-locale="fr-FR" aria-pressed="false" title="FR" data-i18n="language.french" data-i18n-title="language.french">FR</button>
-          <span aria-hidden="true">/</span>
-          <button type="button" data-locale="zh-CN" aria-pressed="false" title="中文" data-i18n="language.chinese" data-i18n-title="language.chinese">中文</button>
-        </div>
         <button class="icon-button" id="productHelpBtn" type="button" aria-label="使用说明、隐私与版本" title="使用说明、隐私与版本" data-i18n-aria="aria.help" data-i18n-title="aria.help">?</button>
         <button class="icon-button" id="undoBtn" type="button" aria-label="撤销" title="撤销 Ctrl+Z" data-i18n-aria="aria.undo" data-i18n-title="title.undo" disabled><span aria-hidden="true">↶</span></button>
         <button class="icon-button" id="redoBtn" type="button" aria-label="重做" title="重做 Ctrl+Y" data-i18n-aria="aria.redo" data-i18n-title="title.redo" disabled><span aria-hidden="true">↷</span></button>
@@ -90,22 +79,22 @@
             <div>
               <span class="drop-icon" aria-hidden="true">＋</span>
               <strong data-i18n="dropzone.title">选择图片 · 智能生成拼豆图</strong>
-              <span data-i18n="dropzone.note">自动判断类型、校准黑白并保持比例；导出前请核对底板与实物色卡。</span>
+              <span class="drop-note" data-i18n="dropzone.note">自动判断类型、校准黑白并保持比例；导出前请核对底板与实物色卡。</span>
             </div>
           </div>
           <div class="file-meta" id="fileMeta" hidden>
             <span class="thumb" aria-hidden="true">IMG</span>
             <div><strong id="fileName">—</strong><span id="fileDetails">—</span></div>
           </div>
+          <button class="button primary wide" id="smartGenerateBtn" type="button" hidden data-i18n="smart.generate">一键智能生成</button>
           <div class="smart-card" id="smartCard" role="status" aria-live="polite" hidden>
-            <span class="smart-kicker" data-i18n="smart.kicker">小白一键模式</span>
-            <strong id="smartTitle" data-i18n="smart.calculating">正在计算推荐方案</strong>
+            <span class="smart-kicker" hidden data-i18n="smart.kicker">小白一键模式</span>
+            <strong id="smartTitle" hidden data-i18n="smart.calculating">正在计算推荐方案</strong>
             <p id="smartSummary" data-i18n="smart.defaultSummary">会自动选择尺寸、处理模式、色板和预览方式。</p>
-            <div class="smart-steps" aria-label="使用步骤" data-i18n-aria="aria.steps"><span data-i18n="smart.step1">1 上传图片</span><span data-i18n="smart.step2">2 检查图纸</span><span data-i18n="smart.step3">3 导出制作</span></div>
+            <div class="smart-steps" hidden aria-label="使用步骤" data-i18n-aria="aria.steps"><span data-i18n="smart.step1">1 上传图片</span><span data-i18n="smart.step2">2 检查图纸</span><span data-i18n="smart.step3">3 导出制作</span></div>
             <div class="smart-actions">
-              <button class="button primary" id="smartGenerateBtn" type="button" data-i18n="smart.generate">一键智能生成</button>
               <button class="button secondary" id="smartExportBtn" type="button" data-i18n="action.exportBuildSheet" hidden>导出制作图纸</button>
-              <button class="button secondary" id="smartAdvancedBtn" type="button" data-i18n="action.adjust">调整参数</button>
+              <button class="button secondary" id="smartAdvancedBtn" type="button" data-i18n="action.adjust" hidden>调整参数</button>
               <button class="button secondary" id="restoreFullImageBtn" type="button" data-i18n="action.restoreFullImage" hidden>恢复完整原图边界</button>
             </div>
           </div>
@@ -161,8 +150,8 @@
           </div>
 
           <div class="field">
-            <label class="field-label" for="maxColors"><span data-i18n="field.maxColors">单张图最多用色</span> <output id="maxColorsValue">32</output></label>
-            <input id="maxColors" type="range" min="2" max="64" value="32">
+            <label class="field-label" for="maxColors"><span data-i18n="field.maxColors">单张图最多用色</span> <output id="maxColorsValue">48</output></label>
+            <input id="maxColors" type="range" min="2" max="64" value="48">
             <small class="field-note" data-i18n="field.maxColorsNote">自动匹配会从当前色板中选择最接近的颜色；这里限制的是本张图实际使用的色数，不是色板总数。</small>
           </div>
 
@@ -182,8 +171,9 @@
           </details>
         </section>
 
-        <section class="panel-section" id="sizeSection">
-          <div class="section-head"><h2 data-i18n="size.title">图纸尺寸</h2><small data-i18n="size.subtitle">图案与底板分开</small></div>
+        <details class="panel-section collapsible-section" id="sizeSection">
+          <summary class="section-head"><h2 data-i18n="size.title">图纸尺寸</h2><small data-i18n="size.subtitle">图案与底板分开</small></summary>
+          <div class="collapsible-body">
           <div class="size-mode-tabs" role="group" aria-label="尺寸设置方式" data-i18n-aria="aria.sizeMode">
             <button class="size-mode-button" type="button" data-size-mode="pattern" aria-pressed="true" data-i18n="size.patternMode">按图案清晰度</button>
             <button class="size-mode-button" type="button" data-size-mode="board" aria-pressed="false" data-i18n="size.boardMode">按真实底板</button>
@@ -233,10 +223,12 @@
             <small class="field-note" data-i18n="board.compatibilityNote">50 格与 52 格板的针距可能不同，只能按手头实物板型选择；网站不会把不同板型当作可混拼。</small>
           </div>
           <button class="button secondary wide" id="applySizeBtn" type="button" style="margin-top:10px" data-i18n="action.applySize">应用尺寸</button>
-        </section>
+          </div>
+        </details>
 
-        <section class="panel-section">
-          <div class="section-head"><h2 data-i18n="tools.title">绘制与变换</h2><small data-i18n="tools.subtitle">支持拖拽连绘</small></div>
+        <details class="panel-section collapsible-section" id="toolsSection">
+          <summary class="section-head"><h2 data-i18n="tools.title">绘制与变换</h2><small data-i18n="tools.subtitle">支持拖拽连绘</small></summary>
+          <div class="collapsible-body">
           <div class="tool-grid" role="group" aria-label="绘制工具" data-i18n-aria="aria.tools">
             <button class="tool-button" type="button" data-tool="brush" aria-pressed="true"><b aria-hidden="true">✎</b><span data-i18n="tool.brush">画笔 B</span></button>
             <button class="tool-button" type="button" data-tool="eraser" aria-pressed="false"><b aria-hidden="true">◇</b><span data-i18n="tool.eraser">橡皮 E</span></button>
@@ -254,10 +246,12 @@
             <button class="button compact secondary" id="rotateBtn" type="button" data-i18n="tool.rotate">顺时针 90°</button>
             <button class="button compact danger" id="clearBtn" type="button" data-i18n="tool.clear">清空图纸</button>
           </div>
-        </section>
+          </div>
+        </details>
 
-        <section class="panel-section">
-          <div class="section-head"><h2 data-i18n="output.title">工程与输出</h2><small data-i18n="output.subtitle">PNG / JSON / 打印</small></div>
+        <details class="panel-section collapsible-section" id="outputSection">
+          <summary class="section-head"><h2 data-i18n="output.title">工程与输出</h2><small data-i18n="output.subtitle">PNG / JSON / 打印</small></summary>
+          <div class="collapsible-body">
           <label class="field" for="majorGridStep">
             <span class="field-label" data-i18n="output.majorGrid">粗辅助线间隔</span>
             <select id="majorGridStep">
@@ -274,7 +268,8 @@
           </div>
           <button class="button primary wide" id="exportPngBtn" type="button" style="margin-top:8px" data-i18n="action.exportPng">导出色号施工图 PNG</button>
           <button class="button secondary wide" id="printBtn" type="button" style="margin-top:8px" data-i18n="action.print">分页 / 浏览器打印</button>
-        </section>
+          </div>
+        </details>
       </aside>
 
       <section class="stage-panel" aria-label="图纸预览与编辑" data-i18n-aria="aria.stage">
@@ -432,7 +427,7 @@
       <span id="statusZoom">100%</span>
       <span class="status-message" id="statusMessage" data-i18n="status.ready">准备就绪 · 所有处理均在本机完成</span>
       <span class="release-badge" id="appVersion">v1.2.0</span>
-      <nav class="release-links" aria-label="项目与许可" data-i18n-aria="aria.projectLicense"><a href="https://github.com/zwhy149/bead-grid-studio" target="_blank" rel="noopener noreferrer">GitHub</a><a href="./privacy.html" data-i18n="footer.privacy">隐私</a><a href="./terms.html" data-i18n="footer.terms">条款</a><a href="./LICENSE.txt" data-i18n="footer.license">开源许可</a><a href="./NOTICE.txt" data-i18n="footer.notices">第三方许可</a></nav>
+      <!-- <nav class="release-links" aria-label="项目与许可" data-i18n-aria="aria.projectLicense"><a href="https://github.com/zwhy149/bead-grid-studio" target="_blank" rel="noopener noreferrer">GitHub</a><a href="./privacy.html" data-i18n="footer.privacy">隐私</a><a href="./terms.html" data-i18n="footer.terms">条款</a><a href="./LICENSE.txt" data-i18n="footer.license">开源许可</a><a href="./NOTICE.txt" data-i18n="footer.notices">第三方许可</a></nav> -->
     </footer>
   </div>
 

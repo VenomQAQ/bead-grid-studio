@@ -169,7 +169,7 @@
     }
 
     .language-switcher {
-      display: inline-flex;
+      display: none;
       align-items: center;
       gap: 2px;
       padding: 3px;
@@ -340,11 +340,28 @@
 
     .section-head small { color: var(--faint); font-size: 10px; }
 
+    details.collapsible-section > summary.section-head {
+      list-style: none;
+      cursor: pointer;
+      margin-bottom: 0;
+      user-select: none;
+    }
+    details.collapsible-section > summary.section-head::-webkit-details-marker { display: none; }
+    details.collapsible-section > summary.section-head::after {
+      content: "＋";
+      color: var(--accent);
+      font-size: 15px;
+      font-weight: 500;
+      line-height: 1;
+    }
+    details.collapsible-section[open] > summary.section-head { margin-bottom: 13px; }
+    details.collapsible-section[open] > summary.section-head::after { content: "−"; }
+
     .dropzone {
       display: grid;
       place-items: center;
-      min-height: 122px;
-      padding: 18px;
+      min-height: 64px;
+      padding: 8px 12px;
       color: var(--muted);
       background:
         radial-gradient(circle at 8px 8px, rgba(36,34,31,.07) 1.4px, transparent 1.5px) 0 0 / 16px 16px,
@@ -362,21 +379,21 @@
       transform: translateY(-1px);
     }
 
-    .dropzone strong { display: block; color: var(--ink); font-size: 13px; }
-    .dropzone span { display: block; max-width: 190px; margin-top: 7px; font-size: 11px; line-height: 1.5; }
+    .dropzone strong { display: block; color: var(--ink); font-size: 12px; }
+    .dropzone .drop-note { display: none; }
 
     .drop-icon {
       display: grid;
       place-items: center;
-      width: 40px;
-      height: 40px;
-      margin: 0 auto 10px;
+      width: 26px;
+      height: 26px;
+      margin: 0 auto 6px;
       color: var(--accent);
       background: white;
       border: 1px solid var(--line);
       border-radius: 50%;
-      box-shadow: 0 6px 14px rgba(60, 48, 39, .08);
-      font-size: 19px;
+      box-shadow: 0 4px 10px rgba(60, 48, 39, .08);
+      font-size: 15px;
     }
 
     .file-meta {
@@ -436,23 +453,26 @@
     .detail-advice strong { display: block; margin-top: 4px; font-size: 12px; line-height: 1.4; }
     .detail-advice p { margin: 5px 0 0; color: var(--muted); font-size: 10px; line-height: 1.55; }
 
+    #smartGenerateBtn {
+      margin-top: 8px;
+    }
+
     .smart-card {
       margin-top: 10px;
-      padding: 12px;
+      padding: 10px 12px;
       background: linear-gradient(145deg, #fff8f2, #f6eee7);
       border: 1px solid #e7c9bb;
       border-left: 4px solid var(--accent);
       border-radius: 10px;
     }
 
-    .smart-card .smart-kicker { display: block; color: var(--accent); font-size: 9px; font-weight: 850; letter-spacing: .08em; }
-    .smart-card strong { display: block; margin-top: 4px; font-size: 12px; line-height: 1.4; }
-    .smart-card p { margin: 5px 0 0; color: var(--muted); font-size: 10px; line-height: 1.55; }
-    .smart-steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 5px; margin-top: 9px; }
-    .smart-steps span { padding: 5px 4px; color: #6d554a; background: rgba(255,255,255,.72); border: 1px solid rgba(176,77,41,.13); border-radius: 7px; text-align: center; font-size: 9px; }
-    .smart-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; margin-top: 9px; }
-    .smart-actions #smartGenerateBtn { grid-column: 1 / -1; }
-    .smart-actions #restoreFullImageBtn { grid-column: 1 / -1; }
+    .smart-card .smart-kicker,
+    .smart-card #smartTitle,
+    .smart-steps { display: none; }
+    .smart-card p { margin: 0; color: var(--ink); font-size: 11px; line-height: 1.55; }
+    .smart-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; }
+    .smart-actions:not(:has(button:not([hidden]))) { display: none; }
+    .smart-actions #restoreFullImageBtn { grid-column: 1 / -1; margin-top: 8px; }
     .smart-actions .button { min-width: 0; padding-inline: 7px; font-size: 10px; }
 
     .advanced-settings { margin-top: 12px; border-top: 1px solid var(--line); }
