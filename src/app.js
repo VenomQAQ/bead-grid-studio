@@ -2989,7 +2989,7 @@ import {
 
     function init() {
       initializeI18n();
-      els.appVersion.textContent=`v${APP_VERSION}`;
+      if(els.appVersion)els.appVersion.textContent=`v${APP_VERSION}`;
       els.projectTitle.textContent=t('project.untitled');
       setProjectSubtitle('project.localOnly');
       renderPalette();
